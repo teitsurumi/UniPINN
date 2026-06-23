@@ -1,0 +1,13 @@
+torch>=2.0
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+pyDOE3>=1.0
+sympy>=1.12
+
+[dev]
+pytest>=7.0
+pytest-cov
+
+[mesh]
+gmsh>=4.11

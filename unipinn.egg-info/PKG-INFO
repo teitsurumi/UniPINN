@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: unipinn
+Version: 0.1.0
+Summary: Unified Physics-Informed Neural Networks framework for PDE solving
+Requires-Python: >=3.11
+Requires-Dist: torch>=2.0
+Requires-Dist: numpy>=1.24
+Requires-Dist: scipy>=1.10
+Requires-Dist: matplotlib>=3.7
+Requires-Dist: pyDOE3>=1.0
+Requires-Dist: sympy>=1.12
+Provides-Extra: mesh
+Requires-Dist: gmsh>=4.11; extra == "mesh"
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
