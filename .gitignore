@@ -1,3 +1,4 @@
 __pycache__/
-.tmp_result/
+.tmp_results/
+.pytest_cache/
 .vscode/

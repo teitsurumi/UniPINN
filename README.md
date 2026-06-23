@@ -20,10 +20,10 @@ pip install -e ".[mesh]"
 python experiments/poisson1d/vanilla_pinn.py
 
 # Run the full benchmark suite (14 configs, sequential)
-python experiments/poisson1d/batch.py
+python experiments/poisson1d/vanilla_pinn.py --batch
 
 # Run in parallel across 4 workers
-python experiments/poisson1d/batch.py --parallel 4
+python experiments/poisson1d/vanilla_pinn.py --batch --parallel 4
 
 # Analyze results
 python experiments/poisson1d/analyze.py --case 0
@@ -44,9 +44,8 @@ unipinn/
   utils/          Tensor conversion utilities
 experiments/
   poisson1d/
-    vanilla_pinn.py    Single-experiment runner (train + evaluate + save)
+    vanilla_pinn.py    Single and batch runner (train + evaluate + save)
     registry.py        Pre-defined configs (cfg_0–13), configuration as code
-    batch.py           Batch / parallel runner with GPU assignment
     analyze.py         Result analysis and comparison
 scripts/               CLI utilities (config generation, metadata management)
 tests/                 Automated test suite (pytest)
@@ -86,26 +85,26 @@ Pre-defined experiment configurations live in
 | RandomSeedTest | cfg_4 – 5  | 10 random seeds × Adam vs LBFGS        |
 | SampleNumTest  | cfg_6 – 13 | n_colloc ∈ {101, 201, 401} × optimiser |
 
-Use `batch.py` to run them:
+Use `vanilla_pinn.py --batch` to run them:
 
 ```bash
 # List all available configs
-python experiments/poisson1d/batch.py --list
+python experiments/poisson1d/vanilla_pinn.py --list
 
 # Run all 14 configs sequentially (34 tasks after seed expansion)
-python experiments/poisson1d/batch.py
+python experiments/poisson1d/vanilla_pinn.py --batch
 
 # Run with 4 parallel workers
-python experiments/poisson1d/batch.py --parallel 4
+python experiments/poisson1d/vanilla_pinn.py --batch --parallel 4
 
 # Run only specific configs
-python experiments/poisson1d/batch.py --configs cfg_0 cfg_1 cfg_2
+python experiments/poisson1d/vanilla_pinn.py --batch --configs cfg_0 cfg_1 cfg_2
 
 # Run all configs in a group
-python experiments/poisson1d/batch.py --group SampleNumTest --parallel 3
+python experiments/poisson1d/vanilla_pinn.py --batch --group SampleNumTest --parallel 3
 
 # Assign specific GPUs (round-robin across workers)
-python experiments/poisson1d/batch.py --parallel 4 --gpus 0 1
+python experiments/poisson1d/vanilla_pinn.py --batch --parallel 4 --gpus 0 1
 ```
 
 Multi-seed configs (e.g. cfg_4 with 10 seeds) are automatically expanded into

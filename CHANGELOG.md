@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Merged `batch.py` into `vanilla_pinn.py` — single script now handles both
+  single-config and batch/parallel execution via `--batch` flag
+- Removed separate `experiments/poisson1d/batch.py`
+- `vanilla_pinn.py` now bootstraps `sys.path` internally (no longer requires
+  `pip install -e .` to run)
+
 ## [0.1.0] - Project Restructure
 
 ### Added
