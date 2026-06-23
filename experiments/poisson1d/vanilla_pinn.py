@@ -1,10 +1,17 @@
 """1D Poisson — Vanilla PINN training experiment.
 
 Usage:
-    python experiments/poisson1d/vanilla_pinn.py [--config <path_to_config.json>]
+    # Single run (default config)
+    python experiments/poisson1d/vanilla_pinn.py
 
-If no config is given, uses the default Poisson1DVanillaPINNConfig.
-Config JSON files can be generated via Python scripts (see unipinn.config.poisson1d).
+    # Single run with JSON config
+    python experiments/poisson1d/vanilla_pinn.py --config configs/my_run.json
+
+    # Batch / parallel run (see experiments/poisson1d/batch.py for full options)
+    python experiments/poisson1d/batch.py --parallel 4
+
+The ``run_single_experiment`` function is the main entry-point for programmatic use.
+It runs one (config, seed) pair and returns the result directory path.
 """
 
 import sys
@@ -14,8 +21,12 @@ import time
 import argparse
 import numpy as np
 import torch
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 from dataclasses import asdict, replace
 from pathlib import Path
+from typing import Optional
 
 from unipinn.config.poisson1d import Poisson1DVanillaPINNConfig
 from unipinn.nn.architectures import SimpleNN
@@ -28,6 +39,10 @@ from unipinn.core.trainer import Trainer
 from unipinn.pde.loss import PINNLossPoisson1D
 from unipinn.core.callbacks.loggers import ConsoleLoggerTimeit, TimingSummaryCallback
 
+
+# ---------------------------------------------------------------------------
+# Build helpers (model / loss / optimizer / scheduler)
+# ---------------------------------------------------------------------------
 
 def build_experiment(cfg: Poisson1DVanillaPINNConfig):
     """Construct and run a single training experiment from config."""
@@ -109,6 +124,79 @@ def build_experiment(cfg: Poisson1DVanillaPINNConfig):
     return trainer, batch, data
 
 
+# ---------------------------------------------------------------------------
+# High-level runner: one (config, seed) → artifacts on disk
+# ---------------------------------------------------------------------------
+
+def run_single_experiment(
+    cfg: Poisson1DVanillaPINNConfig,
+    result_dir: Path,
+    *,
+    suppress_stdout: bool = True,
+) -> Path:
+    """Run a single (config, seed) experiment and save all artifacts.
+
+    Parameters
+    ----------
+    cfg : Poisson1DVanillaPINNConfig
+        Configuration (seed should already be a scalar int).
+    result_dir : Path
+        Root result directory. A ``seed_<N>/`` sub-folder will be created.
+    suppress_stdout : bool
+        If True (default), capture console output into a buffer so that
+        parallel workers do not interleave prints.
+
+    Returns
+    -------
+    Path
+        Path to the ``seed_<N>/`` directory containing artifacts.
+    """
+    seed_dir = result_dir / f"seed_{cfg.seed}"
+    seed_dir.mkdir(parents=True, exist_ok=True)
+
+    # Capture console output
+    log_buffer = io.StringIO()
+    if suppress_stdout:
+        saved_stdout, saved_stderr = sys.stdout, sys.stderr
+        sys.stdout = StreamTee(sys.__stdout__, log_buffer)
+        sys.stderr = StreamTee(sys.__stderr__, log_buffer)
+
+    try:
+        trainer, batch, data = build_experiment(cfg)
+    finally:
+        if suppress_stdout:
+            sys.stdout, sys.stderr = saved_stdout, saved_stderr
+
+    console_logs = log_buffer.getvalue()
+
+    # Evaluation and plotting
+    global_dtype = torch.float64 if cfg.precision == "float64" else torch.float32
+    model = trainer.model
+    model.eval()
+    with torch.no_grad():
+        x_eval = to_tensor(data["x_eval"], dtype=global_dtype, device=trainer.device).reshape(-1, 1)
+        u_pred = model(x_eval).cpu().numpy().flatten()
+
+    plt.figure(figsize=(6, 4), layout="constrained")
+    plt.plot(data["x_eval"], data["u_eval"].flatten(), linewidth=4, c="#2980b9", alpha=0.5, label="Exact")
+    plt.scatter(data["x_eval"], u_pred, s=1, c="#ff4757", label="PINN")
+    plt.xlabel("x")
+    plt.ylabel("u(x)")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.savefig(seed_dir / "prediction_plot.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # Save artifacts
+    save_experiment_artifacts(seed_dir, cfg, trainer, data, u_pred, console_logs)
+    print(f"seed_{cfg.seed} artifacts saved to {seed_dir}")
+    return seed_dir
+
+
+# ---------------------------------------------------------------------------
+# Report helper
+# ---------------------------------------------------------------------------
+
 def _generate_features_report(cfg: Poisson1DVanillaPINNConfig, seeds: list) -> str:
     """Generate a markdown report comparing config to defaults."""
     try:
@@ -140,6 +228,10 @@ def _generate_features_report(cfg: Poisson1DVanillaPINNConfig, seeds: list) -> s
     return header
 
 
+# ---------------------------------------------------------------------------
+# CLI entry-point
+# ---------------------------------------------------------------------------
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="1D Poisson Vanilla PINN Training")
     parser.add_argument("--config", type=str, default=None, help="Path to config JSON file")
@@ -163,46 +255,11 @@ if __name__ == "__main__":
     result_dir.mkdir(parents=True, exist_ok=True)
     print(f"\nResults will be saved to: {result_dir}")
 
-    # Training loop over seeds
+    # Training loop over seeds (sequential, with stdout capture)
     for s in seeds:
         print(f"\n{'=' * 40}\nRunning seed: {s}\n{'=' * 40}")
         cfg_s = replace(cfg, seed=s)
-        seed_dir = result_dir / f"seed_{s}"
-        seed_dir.mkdir(parents=True, exist_ok=True)
-
-        # Capture console output
-        log_buffer = io.StringIO()
-        sys.stdout = StreamTee(sys.__stdout__, log_buffer)
-        sys.stderr = StreamTee(sys.__stderr__, log_buffer)
-
-        trainer, batch, data = build_experiment(cfg_s)
-
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-        console_logs = log_buffer.getvalue()
-
-        # Evaluation and plotting
-        global_dtype = torch.float64 if cfg_s.precision == "float64" else torch.float32
-        model = trainer.model
-        model.eval()
-        with torch.no_grad():
-            x_eval = to_tensor(data["x_eval"], dtype=global_dtype, device=trainer.device).reshape(-1, 1)
-            u_pred = model(x_eval).cpu().numpy().flatten()
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(6, 4), layout="constrained")
-        plt.plot(data["x_eval"], data["u_eval"].flatten(), linewidth=4, c="#2980b9", alpha=0.5, label="Exact")
-        plt.scatter(data["x_eval"], u_pred, s=1, c="#ff4757", label="PINN")
-        plt.xlabel("x")
-        plt.ylabel("u(x)")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.savefig(seed_dir / "prediction_plot.png", dpi=300, bbox_inches="tight")
-        plt.close()
-
-        # Save artifacts
-        save_experiment_artifacts(seed_dir, cfg_s, trainer, data, u_pred, console_logs)
-        print(f"seed_{s} artifacts saved.")
+        run_single_experiment(cfg_s, result_dir, suppress_stdout=True)
 
     # Generate comments
     comments = _generate_features_report(cfg, seeds)
