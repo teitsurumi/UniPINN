@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unipinn"
+version = "0.1.0"
+description = "Unified Physics-Informed Neural Networks framework for PDE solving"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "pyDOE3>=1.0",
+    "sympy>=1.12",
+]
+
+[project.optional-dependencies]
+mesh = ["gmsh>=4.11"]
+dev = ["pytest>=7.0", "pytest-cov"]
+
+[tool.setuptools.packages.find]
+include = ["unipinn*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

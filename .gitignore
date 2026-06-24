@@ -1,3 +1,7 @@
 __pycache__/
-.tmp_result/
+.tmp_results/
+.tmp_img/
+.pytest_cache/
 .vscode/
+**/**.tex
+**/**.pptx
