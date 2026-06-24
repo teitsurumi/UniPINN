@@ -30,12 +30,12 @@ def test_poisson1d_sampling_methods():
 
 def test_poisson2d_registry():
     names = Poisson2DBenchmarkIndex.list()
-    assert "sin_product" in names
-    assert "corner_singular" in names
+    assert "harmonic_rational" in names
+    assert "steep_product_2d" in names
 
 
 def test_poisson2d_generate():
-    bench = Poisson2DBenchmarkIndex.get("sin_product")
+    bench = Poisson2DBenchmarkIndex.get("harmonic_rational")
     data = bench.generate(n_colloc=100, n_eval=10, n_bc_per_edge=10, seed=42)
     assert data["x_colloc"].shape[1] == 2
     assert data["x_eval"].shape[1] == 2

@@ -161,95 +161,81 @@ class BasePoisson2DBenchmark(BaseBenchmark, ABC):
 # Case 1: Concrete rectangular benchmarks
 # ============================================================================
 
-@Poisson2DBenchmarkIndex.register("sin_product")
-class SinProductBenchmark(BasePoisson2DBenchmark):
-    """u = sin(pi*x)*sin(pi*y) on unit square."""
-    def __init__(self, domain=((0, 1), (0, 1)), bc_type: str = "dirichlet"):
-        PI = np.pi
-        u = lambda pts: np.sin(PI * pts[:, 0]) * np.sin(PI * pts[:, 1])
-        u_grad = lambda pts: (
-            PI * np.cos(PI * pts[:, 0]) * np.sin(PI * pts[:, 1]),
-            PI * np.sin(PI * pts[:, 0]) * np.cos(PI * pts[:, 1]),
-        )
-        f = lambda pts: 2.0 * (PI ** 2) * np.sin(PI * pts[:, 0]) * np.sin(PI * pts[:, 1])
-        super().__init__(domain, bc_type, u, u_grad, f,
-                         "Smooth solution: u=sin(pi*x)*sin(pi*y)")
+@Poisson2DBenchmarkIndex.register("harmonic_rational")
+class HarmonicRationalBenchmark(BasePoisson2DBenchmark):
+    r"""Harmonic function u = 2(1+y) / ((3+x)^2 + (1+y)^2). Reference [1].
 
+    This is the imaginary part of 2/(z + 3 + i), hence satisfies Laplace's
+    equation exactly (f = 0). Provides a smooth, non-trivial test for
+    Dirichlet boundary enforcement.
 
-@Poisson2DBenchmarkIndex.register("high_freq_sin")
-class HighFreqSinBenchmark(BasePoisson2DBenchmark):
-    """u = sin(3*pi*x)*sin(3*pi*y). Higher frequency."""
-    def __init__(self, domain=((0, 1), (0, 1)), bc_type: str = "dirichlet"):
-        PI = np.pi
-        freq = 3.0
-        u = lambda pts: np.sin(freq * PI * pts[:, 0]) * np.sin(freq * PI * pts[:, 1])
-        u_grad = lambda pts: (
-            freq * PI * np.cos(freq * PI * pts[:, 0]) * np.sin(freq * PI * pts[:, 1]),
-            freq * PI * np.sin(freq * PI * pts[:, 0]) * np.cos(freq * PI * pts[:, 1]),
-        )
-        f = lambda pts: 2.0 * (freq * PI) ** 2 * np.sin(freq * PI * pts[:, 0]) * np.sin(freq * PI * pts[:, 1])
-        super().__init__(domain, bc_type, u, u_grad, f,
-                         f"High-frequency: freq={freq}")
-
-
-@Poisson2DBenchmarkIndex.register("polynomial_bubble")
-class PolynomialBubbleBenchmark(BasePoisson2DBenchmark):
-    """u = x*(1-x)*y*(1-y). Polynomial, zero Dirichlet BC."""
-    def __init__(self, domain=((0, 1), (0, 1)), bc_type: str = "dirichlet"):
-        u = lambda pts: pts[:, 0] * (1 - pts[:, 0]) * pts[:, 1] * (1 - pts[:, 1])
-        u_grad = lambda pts: (
-            (1 - 2 * pts[:, 0]) * pts[:, 1] * (1 - pts[:, 1]),
-            pts[:, 0] * (1 - pts[:, 0]) * (1 - 2 * pts[:, 1]),
-        )
-        f = lambda pts: 2 * pts[:, 1] * (1 - pts[:, 1]) + 2 * pts[:, 0] * (1 - pts[:, 0])
-        super().__init__(domain, bc_type, u, u_grad, f, "Polynomial bubble: zero Dirichlet")
-
-
-@Poisson2DBenchmarkIndex.register("gaussian_bump")
-class GaussianBumpBenchmark(BasePoisson2DBenchmark):
-    """Localized Gaussian bump centered at (0.5, 0.5)."""
-    def __init__(self, sigma: float = 0.1, domain=((0, 1), (0, 1)), bc_type: str = "dirichlet"):
+    Default domain: [-1, 1] x [-1, 1].
+    """
+    def __init__(self, domain=((-1, 1), (-1, 1)), bc_type: str = "dirichlet"):
         def u(pts):
-            r2 = (pts[:, 0] - 0.5) ** 2 + (pts[:, 1] - 0.5) ** 2
-            return np.exp(-r2 / (2 * sigma ** 2))
-        def u_grad(pts):
-            dx, dy = pts[:, 0] - 0.5, pts[:, 1] - 0.5
-            r2 = dx ** 2 + dy ** 2
-            factor = -np.exp(-r2 / (2 * sigma ** 2)) / (sigma ** 2)
-            return factor * dx, factor * dy
-        def f(pts):
-            dx, dy = pts[:, 0] - 0.5, pts[:, 1] - 0.5
-            r2 = dx ** 2 + dy ** 2
-            exp_term = np.exp(-r2 / (2 * sigma ** 2))
-            return -exp_term * (r2 / sigma ** 4 - 2.0 / sigma ** 2)
-        super().__init__(domain, bc_type, u, u_grad, f,
-                         f"Gaussian bump (sigma={sigma})")
+            X = 3.0 + pts[:, 0]
+            Y = 1.0 + pts[:, 1]
+            D = X ** 2 + Y ** 2
+            return 2.0 * Y / D
 
-
-@Poisson2DBenchmarkIndex.register("corner_singular")
-class CornerSingularBenchmark(BasePoisson2DBenchmark):
-    """Corner singularity: u = r^(2/3) * sin(2*theta/3). Harmonic (f=0)."""
-    def __init__(self, domain=((0, 1), (0, 1)), bc_type: str = "dirichlet"):
-        alpha = 2.0 / 3.0
-        def u(pts):
-            x = pts[:, 0] + 1e-15
-            y = pts[:, 1] + 1e-15
-            r = np.sqrt(x ** 2 + y ** 2)
-            theta = np.arctan2(y, x)
-            return (r ** alpha) * np.sin(alpha * theta)
         def u_grad(pts):
-            x = pts[:, 0] + 1e-15
-            y = pts[:, 1] + 1e-15
-            r = np.sqrt(x ** 2 + y ** 2)
-            theta = np.arctan2(y, x)
-            r_am1 = r ** (alpha - 1)
-            dudx = alpha * r_am1 * ((x / r) * np.sin(alpha * theta) - (y / r) * np.cos(alpha * theta))
-            dudy = alpha * r_am1 * ((y / r) * np.sin(alpha * theta) + (x / r) * np.cos(alpha * theta))
+            X = 3.0 + pts[:, 0]
+            Y = 1.0 + pts[:, 1]
+            D = X ** 2 + Y ** 2
+            D2 = D ** 2
+            dudx = -4.0 * X * Y / D2
+            dudy = 2.0 * (X ** 2 - Y ** 2) / D2
             return dudx, dudy
+
         def f(pts):
+            # Harmonic: Laplacian(u) = 0, so f = -Laplacian(u) = 0
             return np.zeros(pts.shape[0])
+
         super().__init__(domain, bc_type, u, u_grad, f,
-                         f"Corner singularity: u=r^{alpha}*sin({alpha}*theta)")
+                         "Harmonic rational: u=2(1+y)/((3+x)^2+(1+y)^2), f=0. Ref [1]")
+
+
+@Poisson2DBenchmarkIndex.register("steep_product_2d")
+class SteepProduct2DBenchmark(BasePoisson2DBenchmark):
+    r"""u = (0.1*sin(wx*x) + tanh(r1*x)) * sin(wy*y). Reference [1].
+
+    Combines high-frequency oscillation in x with a steep tanh transition,
+    modulated by a sinusoidal envelope in y.  Challenging for PINNs due to
+    the multi-scale structure.
+
+    Default domain: [-1, 1] x [-1, 1], wx = 4*pi, wy = 4*pi, r1 = 10.
+    """
+    def __init__(self, wx: float = 4 * np.pi, wy: float = 4 * np.pi,
+                 r1: float = 10.0,
+                 domain=((-1, 1), (-1, 1)), bc_type: str = "dirichlet"):
+        def g(x):
+            return 0.1 * np.sin(wx * x) + np.tanh(r1 * x)
+
+        def g_pp(x):
+            s = np.cosh(r1 * x)
+            sech2 = 1.0 / (s ** 2)
+            return -0.1 * wx ** 2 * np.sin(wx * x) + 2.0 * r1 ** 2 * np.tanh(r1 * x) * sech2
+
+        def u(pts):
+            return g(pts[:, 0]) * np.sin(wy * pts[:, 1])
+
+        def u_grad(pts):
+            x, y = pts[:, 0], pts[:, 1]
+            # dg/dx
+            s = np.cosh(r1 * x)
+            sech2 = 1.0 / (s ** 2)
+            dg = 0.1 * wx * np.cos(wx * x) + r1 * sech2
+            dudx = dg * np.sin(wy * y)
+            dudy = g(x) * wy * np.cos(wy * y)
+            return dudx, dudy
+
+        def f(pts):
+            x, y = pts[:, 0], pts[:, 1]
+            h = np.sin(wy * y)
+            return -(g_pp(x) * h - wy ** 2 * g(x) * h)
+
+        super().__init__(domain, bc_type, u, u_grad, f,
+                         f"Steep product 2D: wx={wx:.2f}, wy={wy:.2f}, r1={r1:.1f}. Ref [1]")
 
 
 # ============================================================================
