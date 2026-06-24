@@ -27,7 +27,7 @@ class SimpleNN(nn.Module):
 
         config = {
             1: {"n": 1},                              # input layer (1D)
-            2: {"n": 32, "a": "dynsine", "p": 1},    # hidden: 32 neurons, DynSine
+            2: {"n": 32, "a": "dynsine", "p": 1},     # hidden: 32 neurons, DynSine
             3: {"n": 32, "a": "dynsine", "p": 1},
             4: {"n": 32, "a": "dynsine", "p": 1},
             5: {"n": 1},                              # output layer (1D)

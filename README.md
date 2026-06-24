@@ -34,6 +34,8 @@ python experiments/poisson1d/analyze.py --case 0
 
 ## Project Structure
 
+![Architecture](doc/architecture.png)
+
 ```
 unipinn/
   core/           Training engine (Trainer, Callback system)

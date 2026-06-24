@@ -133,7 +133,8 @@ class BasePoisson2DBenchmark(BaseBenchmark, ABC):
         else:
             u_bc, du_bc_out = None, du_bc_all
 
-        n_side = n_eval if sampling_method == "uniform" else int(np.sqrt(n_eval))
+        # n_side = n_eval if sampling_method == "uniform" else int(np.sqrt(n_eval))
+        n_side = n_eval
         xs = np.linspace(self.domain[0][0], self.domain[0][1], n_side)
         ys = np.linspace(self.domain[1][0], self.domain[1][1], n_side)
         X, Y = np.meshgrid(xs, ys, indexing="ij")
