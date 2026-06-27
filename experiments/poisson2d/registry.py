@@ -148,7 +148,7 @@ cfg_7 = Poisson2DVanillaPINNConfig(
 # Review
 # ──────────────────────────────────────────────────────────────
 
-cfg_8 = Poisson2DVanillaPINNConfig(
+cfg_8 = Poisson2DVanillaPINNConfig(  # Failed
     exp_group=["UnsupervisedColloc", "LRSchedulerTest"],
     seed=_FIXED_SEED,
     benchmark_name="steep_product_2d",
@@ -162,7 +162,7 @@ cfg_8 = Poisson2DVanillaPINNConfig(
     scheduler_gamma=0.56,
 )
 
-cfg_9 = Poisson2DVanillaPINNConfig(
+cfg_9 = Poisson2DVanillaPINNConfig(  # Failed
     exp_group=["UnsupervisedColloc", "LRSchedulerTest"],
     seed=_FIXED_SEED,
     benchmark_name="steep_product_2d",
@@ -176,7 +176,7 @@ cfg_9 = Poisson2DVanillaPINNConfig(
     scheduler_gamma=0.86,
 )
 
-cfg_10 = Poisson2DVanillaPINNConfig(
+cfg_10 = Poisson2DVanillaPINNConfig(  # Failed
     exp_group=["UnsupervisedColloc", "LRSchedulerTest"],
     seed=_FIXED_SEED,
     benchmark_name="steep_product_2d",
@@ -190,7 +190,7 @@ cfg_10 = Poisson2DVanillaPINNConfig(
     scheduler_gamma=0.88,
 )
 
-cfg_11 = Poisson2DVanillaPINNConfig(
+cfg_11 = Poisson2DVanillaPINNConfig(  # Failed
     exp_group=["UnsupervisedColloc", "LRSchedulerTest"],
     seed=_FIXED_SEED,
     benchmark_name="steep_product_2d",
@@ -208,8 +208,8 @@ cfg_12 = Poisson2DVanillaPINNConfig(
     exp_group=["UnsupervisedColloc", "LRSchedulerTest"],
     seed=_FIXED_SEED,
     benchmark_name="steep_product_2d",
-    benchmark_sampling_method="uniform",   # keep cfg_10's proven sampling
-    n_colloc=4900, n_bc_per_edge=70,       # 70×70 grid, slightly more BC
+    benchmark_sampling_method="uniform",
+    n_colloc=4900, n_bc_per_edge=70,
     arch_config={
         1: {"n": 2},
         2: {"n": 64, "a": "dynsine", "p": 1},
@@ -217,20 +217,20 @@ cfg_12 = Poisson2DVanillaPINNConfig(
         4: {"n": 64, "a": "dynsine", "p": 1},
         5: {"n": 64, "a": "dynsine", "p": 1},
         6: {"n": 1},
-    },  # 5×64: more capacity
+    },  # more capacity
     optimizer="adam", epochs=32000, precision="float64",
-    pde_weight=1.0, bc_weight=64.0, lr=1e-2,   # keep cfg_10's lr
+    pde_weight=1.0, bc_weight=64.0, lr=1e-2,
     warmup_epochs=5000,
     scheduler_type="steplr", scheduler_step_times=64,
-    scheduler_gamma=0.9,                   # gentler decay
+    scheduler_gamma=0.9,  # gentler decay
 )
 
 cfg_13 = Poisson2DVanillaPINNConfig(
     exp_group=["UnsupervisedColloc", "LRSchedulerTest"],
     seed=_FIXED_SEED,
     benchmark_name="steep_product_2d",
-    benchmark_sampling_method="uniform",   # keep cfg_10's proven sampling
-    n_colloc=5200, n_bc_per_edge=70,       # 70×70 grid, slightly more BC
+    benchmark_sampling_method="uniform",
+    n_colloc=8100, n_bc_per_edge=70,
     arch_config={
         1: {"n": 2},
         2: {"n": 64, "a": "dynsine", "p": 1},
@@ -238,12 +238,12 @@ cfg_13 = Poisson2DVanillaPINNConfig(
         4: {"n": 64, "a": "dynsine", "p": 1},
         5: {"n": 64, "a": "dynsine", "p": 1},
         6: {"n": 1},
-    },  # 5×64: more capacity
+    },
     optimizer="adam", epochs=36000, precision="float64",
-    pde_weight=1.0, bc_weight=64.0, lr=1e-2,   # keep cfg_10's lr
+    pde_weight=1.0, bc_weight=64.0, lr=1e-2,
     warmup_epochs=5000,
-    scheduler_type="steplr", scheduler_step_times=60,
-    scheduler_gamma=0.9,                   # gentler decay
+    scheduler_type="steplr", scheduler_step_size=422,
+    scheduler_gamma=0.9,
 )
 
 # ──────────────────────────────────────────────────────────────
