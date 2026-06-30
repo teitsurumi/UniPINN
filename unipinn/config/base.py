@@ -23,3 +23,11 @@ class BaseExperimentConfig:
     # Training loop
     epochs: int = 6000
     log_interval: int = 200
+
+    # ============== Optional diagnostic callbacks ==============
+    # Set to a list of epoch numbers to activate; None = disabled.
+    spectra_epochs: Optional[List[int]] = None
+    landscape_epochs: Optional[List[int]] = None
+    landscape_grid_size: int = 40
+    landscape_alpha_range: float = 1.0
+    landscape_beta_range: float = 1.0

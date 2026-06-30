@@ -13,7 +13,8 @@ from dataclasses import dataclass, field
 class Callback:
     """Base callback class. Override specific event methods as needed."""
     def on_epoch_begin(self, trainer): pass
-    def on_epoch_end(self, trainer, epoch: int, loss_dict: Dict[str, float], epoch_delta: float): pass
+    def on_epoch_end(self, trainer, epoch: int, loss_dict: Dict[str, float],
+                     epoch_delta: float, batch: Dict[str, torch.Tensor]): pass
     def on_optimizer_switch(self, trainer, old_opt, new_opt): pass
     def on_training_end(self, trainer, total_time: float, avg_time_per_step: float): pass
 
@@ -113,6 +114,7 @@ class Trainer:
                 epoch=ep,
                 loss_dict=loss_dict_np,
                 epoch_delta=epoch_delta,
+                batch=batch,
             )
 
             if ep >= self.warmup and self.scheduler:

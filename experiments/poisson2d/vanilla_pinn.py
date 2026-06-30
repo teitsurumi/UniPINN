@@ -189,14 +189,14 @@ def run_single_experiment(
 
     # 3-panel scatter plot: exact | prediction | error
     fig, axes = plt.subplots(1, 3, figsize=(18, 5), layout="constrained")
-    sc0 = axes[0].scatter(x_coords, y_coords, c=u_exact, cmap="viridis", s=2)
+    sc0 = axes[0].scatter(x_coords, y_coords, c=u_exact, cmap="viridis", s=1)
     axes[0].set_title("Exact")
     fig.colorbar(sc0, ax=axes[0])
-    sc1 = axes[1].scatter(x_coords, y_coords, c=u_pred, cmap="viridis", s=2)
+    sc1 = axes[1].scatter(x_coords, y_coords, c=u_pred, cmap="viridis", s=1)
     axes[1].set_title("PINN")
     fig.colorbar(sc1, ax=axes[1])
     err = np.abs(u_exact - u_pred)
-    sc2 = axes[2].scatter(x_coords, y_coords, c=err, cmap="hot", s=2)
+    sc2 = axes[2].scatter(x_coords, y_coords, c=err, cmap="hot", s=1)
     axes[2].set_title("|Error|")
     fig.colorbar(sc2, ax=axes[2])
     plt.savefig(seed_dir / "prediction_plot.png", dpi=300, bbox_inches="tight")

@@ -161,6 +161,18 @@ cfg_13 = Poisson1DVanillaPINNConfig(
     scheduler_type="cosine",
 )
 
+cfg_14 = Poisson1DVanillaPINNConfig(
+    exp_group=["TrainingDynamicsTest"],
+    seed=_FIXED_SEED, n_colloc=101,
+    optimizer="adam", epochs=20000, precision="float64",
+    benchmark_sampling_method="lhs", benchmark_lhs="cm",
+    pde_weight=1.0, bc_weight=50.0, lr=5e-3,
+    scheduler_type="cosine", scheduler_step_times=25,
+    spectra_epochs=[0, 10, 100, 1000, 2000, 4000, 10000],
+    landscape_epochs=[0, 10, 100, 1000, 2000, 4000, 10000],
+    landscape_grid_size=60
+)
+
 # ──────────────────────────────────────────────────────────────
 # Registry
 # ──────────────────────────────────────────────────────────────
@@ -170,6 +182,7 @@ REGISTRY: Dict[str, Poisson1DVanillaPINNConfig] = {
         cfg_0, cfg_1, cfg_2, cfg_3,
         cfg_4, cfg_5,
         cfg_6, cfg_7, cfg_8, cfg_9, cfg_10, cfg_11, cfg_12, cfg_13,
+        cfg_14,
     ])
 }
 """Maps short name (e.g. ``"cfg_0"``) → ``Poisson1DVanillaPINNConfig``."""

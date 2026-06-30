@@ -28,7 +28,7 @@ class Poisson2DVanillaPINNConfig(BaseExperimentConfig):
     benchmark_sampling_method: str = "lhs"
     benchmark_lhs: Optional[str] = "cm"
     n_colloc: int = 2500
-    n_eval: int = 100               # per side -> n_eval^2 total eval points
+    n_eval: int = 150               # per side -> n_eval^2 total eval points
     n_bc_per_edge: int = 50         # 4 edges * n_bc_per_edge total BC points
 
     # Supervised mode (n_data=0 -> unsupervised)
