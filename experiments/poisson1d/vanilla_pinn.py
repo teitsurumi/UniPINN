@@ -62,13 +62,14 @@ from unipinn.pde.benchmarks.poisson1d import Poisson1DBenchmarkIndex, BasePoisso
 from unipinn.core.trainer import Trainer
 from unipinn.pde.loss import PINNLossPoisson1D
 from unipinn.core.callbacks.loggers import ConsoleLoggerTimeit, TimingSummaryCallback
+from unipinn.metrics.callbacks import SpectraCallback, LandscapeCallback
 
 
 # ===================================================================
 # Training
 # ===================================================================
 
-def build_experiment(cfg: Poisson1DVanillaPINNConfig):
+def build_experiment(cfg: Poisson1DVanillaPINNConfig, result_dir: Optional[Path] = None):
     """Construct and run a single training experiment from config."""
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
@@ -135,6 +136,22 @@ def build_experiment(cfg: Poisson1DVanillaPINNConfig):
         TimingSummaryCallback(verbose=True),
     ]
 
+    # Optional diagnostic callbacks (activated via config fields)
+    if cfg.spectra_epochs is not None and result_dir is not None:
+        callbacks.append(SpectraCallback(
+            output_dir=str(result_dir / "spectra"),
+            epochs=cfg.spectra_epochs,
+        ))
+
+    if cfg.landscape_epochs is not None and result_dir is not None:
+        callbacks.append(LandscapeCallback(
+            output_dir=str(result_dir / "landscape"),
+            epochs=cfg.landscape_epochs,
+            grid_size=cfg.landscape_grid_size,
+            alpha_range=cfg.landscape_alpha_range,
+            beta_range=cfg.landscape_beta_range,
+        ))
+
     trainer = Trainer(
         model=model, loss_fn=loss_fn, optimizer=optimizer,
         scheduler=scheduler, warmup_epochs=cfg.warmup_epochs,
@@ -176,7 +193,7 @@ def run_single_experiment(
         sys.stderr = StreamTee(sys.__stderr__, log_buffer)
 
     try:
-        trainer, batch, data = build_experiment(cfg)
+        trainer, batch, data = build_experiment(cfg, result_dir=seed_dir)
     finally:
         if suppress_stdout:
             sys.stdout, sys.stderr = saved_stdout, saved_stderr
